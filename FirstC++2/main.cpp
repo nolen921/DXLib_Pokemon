@@ -1,12 +1,17 @@
 #include<Windows.h>
 #include<d3d11.h>
-#include<WICTextureLoader.h>
 #include<SpriteBatch.h>
 #include<SimpleMath.h>
 #include<CommonStates.h>
-#include<ctime>
-#include<cstdio>
+#include<Keyboard.h>
+
 #include"player.h"
+#include"direct3d.h"
+#include"sprite.h"
+#include"common.h"
+#include"key.h"
+#include<cstdio>
+#include<ctime>
 
 using namespace DirectX;
 using namespace SimpleMath;
@@ -70,98 +75,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         return 0;
     }
 
-    // 機能レベルの設定
-    D3D_FEATURE_LEVEL level[] =
-    {
-        D3D_FEATURE_LEVEL_11_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_10_0
-    };
-
-    // スワップチェーンの設定
-    DXGI_SWAP_CHAIN_DESC sc;
-    ZeroMemory( &sc, sizeof( DXGI_SWAP_CHAIN_DESC ) );                      // 初期化
-    sc.Windowed = true;                                                     // ウィンドウモードの設定
-    sc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;                               // スワップエフェクト
-    sc.OutputWindow = hWnd;                                                 // ウィンドウハンドルの設定
-    sc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;                       // バックバッファの使用方法
-    sc.BufferCount = 1U;                                                    // バックバッファの数
-    sc.BufferDesc.Width = 1280U;                                            // バックバッファサイズ（横）
-    sc.BufferDesc.Height = 720U;                                            // バックバッファサイズ（縦）
-    sc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;                      // バックバッファフォーマット
-    sc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;                  //　スケーリングモード
-    sc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;  // スキャンライン描画モード
-    sc.BufferDesc.RefreshRate.Numerator = 60U;                              // リフレッシュレート（分子）
-    sc.BufferDesc.RefreshRate.Denominator = 1U;                             // リフレッシュレート(分母）
-    sc.SampleDesc.Count = 1;                                                // マルチサンプリング（アンチエイリアス数）
-    sc.SampleDesc.Quality = 0;                                              // マルチサンプリング品質
-    sc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;                      // モード設定
-
-    // インターフェイスの宣言
-    ID3D11Device* d3d_device;               // D3Dデバイスインターフェイス
-    ID3D11DeviceContext* device_context;    // デバイスコンテキストインターフェイス
-    IDXGISwapChain* swap_chain;             // スワップチェインインターフェイス
-    D3D_FEATURE_LEVEL feature_level;        // 機能レベル
-
-    // 各種インターフェイスを作成
-    if( FAILED( D3D11CreateDeviceAndSwapChain(
-        NULL,                               // DXGIアダプター
-        D3D_DRIVER_TYPE_HARDWARE,           // ドライバータイプ（_WRAPにすると動くことがある）
-        NULL,                               // ソフトウェアラスタライザーDLLハンドル
-        D3D11_CREATE_DEVICE_DEBUG,          // オプションフラグ
-        level,                              // 機能レベル
-        3,                                  // 機能レベル個数
-        D3D11_SDK_VERSION,                  // 常にこの値を指定
-        &sc,                                // スワップチェーン構造体ポインタ
-        &swap_chain,                        // スワップチェーンインターフェイス受取先ポインタ
-        &d3d_device,                        // 採用された機能レベル
-        &feature_level,                     // デバイスコンテキストインターフェイス受取先ポインタ
-        &device_context ) ) )
+    // Direct3Dの初期化
+    if( !Direct3D::Init( hWnd ) )
     {
         // エラー
         return 0;
     }
-
-    // バックバッファ描画ターゲットの取得
-    ID3D11Texture2D* backbuffer = NULL;
-    if( FAILED( swap_chain->GetBuffer(
-        0,
-        __uuidof(ID3D11Texture2D),
-        reinterpret_cast<void**>(&backbuffer) ) ) )
-    {
-        // エラー
-        return 0;
-    }
-
-    // 描画ターゲットビューの作成
-    ID3D11RenderTargetView* render_target_view = NULL;
-    if( FAILED( d3d_device->CreateRenderTargetView(
-        backbuffer,                     // ビューでアクセスするリソース
-        NULL,                           // ビューの定義
-        &render_target_view ) ) )
-    {
-        // エラー
-        return 0;
-    }
-
-    // バックバッファ開放
-    backbuffer->Release();
-
-    // 描画ターゲットビューを出力マネージャーの描画ターゲットとして設定
-    device_context->OMSetRenderTargets(
-        1,                      // 描画ターゲット数
-        &render_target_view,    // ターゲットビュー配列
-        NULL );                 // 深度/ステンシルビュー
-
-    // ビューポートの作成
-    D3D11_VIEWPORT vp;
-    vp.Width = 1280.0F;
-    vp.Height = 720.0F;
-    vp.MinDepth = 0.0F;
-    vp.MaxDepth = 1.0F;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
-    device_context->RSSetViewports( 1, &vp );
 
     // COMライブラリの初期化
     if( FAILED( CoInitializeEx( NULL, COINIT_MULTITHREADED ) ) )
@@ -170,11 +89,26 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         return 0;
     }
 
-    // SpriteBatchの作成
-    SpriteBatch sprite( device_context );
+    // Spriteクラス初期化
+    if( !Sprite::init() )
+    {
+        // エラー
+        return 0;
+    }
 
-    // CommonStatesの作成
-    CommonStates state( d3d_device );
+    // Commonクラス初期化
+    if( !Common::init() )
+    {
+        // エラー
+        return 0;
+    }
+
+    // Keyboardクラス初期化
+    if( !Key::init() )
+    {
+        // エラー
+        return 0;
+    }
 
     // ウィンドウの表示
     ShowWindow( hWnd, SW_SHOWNORMAL );
@@ -182,29 +116,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     // メインループ
     MSG msg = { NULL };
 
-    // ファイルを開く
-    FILE* fp = fopen( "main.txt", "r" );
-
-    if( fp == NULL )
-    {
-        // 開けなかったらエラー
-        return 1;
-    }
-
-    // ファイルから数値を読み込む
     int num = 1000;
-    fscanf( fp, "%d", &num );
 
     // プレイヤークラス
-    Player* player = new Player[ num ]; /* ループに書かない */
+    Player player; /* ループに書かない */
 
-    for( int i = 0; i < num; i++ )
+    if( !player.init( L"pokemon_char.png_____________" ) )
     {
-        if( !player[ i ].init( L"kirby.png", d3d_device, device_context ) )
-        {
-            // エラー
-            return 0;
-        }
+        // エラー
+        return 0;
     }
 
     // 時間計測
@@ -233,26 +153,28 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 t2 = t1;            // 今の時間を前回の時間とする
                 t3 = dt % 16;       // 誤差分を吸収
 
-                // プレイヤークラス更新
-                for( int i = 0; i < num; i++ )
-                    player[ i ].update();
+                // キーボード入力の取得
+                //Keyboard::State keystate = key.GetState();
+                Key::update();
 
-                float color[] = { 0.1F,0.9F,0.4F,1.0F };    // RGBAを0.0～1.0の間で設定
-                device_context->ClearRenderTargetView( render_target_view, color );
+                // プレイヤークラス更新
+                player.update( Key::getNyuryoku() );
+
+                // 画面クリア関数
+                Direct3D::clear();
 
                 // スプライト描画開始
-                sprite.Begin( SpriteSortMode_Deferred, state.NonPremultiplied() );  /* 中のアルファ宣言により、透明化 */
+                Sprite::begin();
 
                 // プレイヤー描画
-                for( int i = 0; i < num; i++ )
-                    player[ i ].draw( &sprite );
+                player.draw();
 
                 // スプライト描画終了
-                sprite.End();
+                // sprite.End();
+                Sprite::end();
 
                 // 描画更新
-                swap_chain->Present( 1, 0 );
-
+                Direct3D::present();
             }
         }
     }
@@ -261,16 +183,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     CoUninitialize();
 
     // インターフェイスの解放（確保した順の逆に開放していく）
-    for( int i = 0; i < num; i++ )
-        player[ i ].destroy();
-    render_target_view->Release();
-    swap_chain->Release();
-    device_context->ClearState();
-    device_context->Release();
-    d3d_device->Release();
-
-    // メモリ解放
-    delete[] player;
+    player.destroy();
+    Key::destroy();
+    Common::destroy();
+    Sprite::destroy();
+    Direct3D::destroy();
 
     return 0;
 }
@@ -287,7 +204,19 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam )
         EndPaint( hWnd, &ps );
         break;
 
+    case WM_ACTIVATEAPP:
+        Keyboard::ProcessMessage( Msg, wParam, lParam );
+        break;
+
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYUP:
+        Keyboard::ProcessMessage( Msg, wParam, lParam );
+        break;
+
     case WM_KEYDOWN:
+        Keyboard::ProcessMessage( Msg, wParam, lParam );
+        
         switch( wParam )
         {
         case VK_ESCAPE:
@@ -295,6 +224,7 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam )
             PostMessage( hWnd, WM_CLOSE, 0, 0 );
             break;
         }
+        break;
 
     case WM_DESTROY:
         PostQuitMessage( 0 );
