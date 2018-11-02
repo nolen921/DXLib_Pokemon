@@ -20,6 +20,10 @@ private:
     int animation_no_;                  // テクスチャの番号
     int animation_counter_;             // アニメーション用ループカウント
     int direction_;                     // キャラの向き
+    int key_counter_;                   // 入力用ループカウンター
+    bool move_;                         // 移動中フラグ0/1
+    int move_counter_;                  // 移動用ループカウンター
+    static int masu_position_x_, masu_position_y_;         // マス単位の座標
 
 public:
     Player();                           // コンストラクタ
@@ -30,6 +34,11 @@ public:
 
     // 更新処理
     void update(const Keyboard::State* pState);
+
+    // マス単位のプレイヤーX座標を取得
+    static int getMasuPositionX() { return masu_position_x_; }
+    // マス単位のプレイヤーY座標を取得
+    static int getMasuPositionY() { return masu_position_y_; }
 
     // 描画
     void draw();

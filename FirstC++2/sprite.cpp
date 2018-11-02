@@ -25,6 +25,7 @@ void Sprite::draw(
     ID3D11ShaderResourceView* Texture,  // テクスチャ
     const Vector2& Position,            // 座標
     const RECT* Rect,                   // 描画範囲
+    const XMVECTORF32& Color,           // カラー
     const float Rotation,               // 回転
     const Vector2& Scale,               // 拡縮
     const Vector2& Origin,              // アンカーポイント
@@ -35,7 +36,7 @@ void Sprite::draw(
         Texture,                // テクスチャ
         Position,               // 座標
         Rect,                   // 描画範囲
-        Colors::White,          // カラー
+        Color,                  // カラー
         Rotation,               // 回転値   0.0F * XM_PI / 180.0F
         Origin,                 // アンカーポイント（原点）
         Scale,                  // 拡縮

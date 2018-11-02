@@ -15,7 +15,6 @@ bool Key::init()
         // ƒGƒ‰[
         return false;
     }
-
     return true;
 }
 

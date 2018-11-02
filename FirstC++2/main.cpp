@@ -10,6 +10,8 @@
 #include"sprite.h"
 #include"common.h"
 #include"key.h"
+#include"field.h"
+
 #include<cstdio>
 #include<ctime>
 
@@ -121,7 +123,19 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     // プレイヤークラス
     Player player; /* ループに書かない */
 
-    if( !player.init( L"pokemon_char.png_____________" ) )
+    if( !player.init( L"pokemon_char2.png" ) )
+    {
+        // エラー
+        Key::destroy();
+        Common::destroy();
+        Sprite::destroy();
+        Direct3D::destroy();
+        return 0;
+    }
+
+    // フィールドクラス
+    Field field;
+    if( !field.init() )
     {
         // エラー
         return 0;
@@ -166,8 +180,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 // スプライト描画開始
                 Sprite::begin();
 
+                // フィールド描画1
+                field.draw( 0 );
+
                 // プレイヤー描画
                 player.draw();
+
+                // フィールド描画2
+                field.draw( 1 );
 
                 // スプライト描画終了
                 // sprite.End();
@@ -183,6 +203,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     CoUninitialize();
 
     // インターフェイスの解放（確保した順の逆に開放していく）
+    field.destroy();
     player.destroy();
     Key::destroy();
     Common::destroy();

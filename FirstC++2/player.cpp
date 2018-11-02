@@ -1,6 +1,7 @@
 #include"player.h"
 #include"texture.h"
 #include"sprite.h"
+#include"field.h"
 
 /* pokemon_charの大きさ */
 int kPlayertop = 0L;
@@ -10,6 +11,9 @@ int kPlayersizeY = 96L;
 const int haruka = 256;
 const int hakase = 384;
 
+int Player::masu_position_x_;
+int Player::masu_position_y_;
+
 // コンストラクタ
 Player::Player()
 {
@@ -17,8 +21,8 @@ Player::Player()
     // position_.x = static_cast<float>(rand() % 1280);
     // position_.y = static_cast<float>(rand() % 720);
     // speed_ = static_cast<float>(rand() % 10) + 2.0F;
-    position_.x = 608.0F;
-    position_.y = 296.0F;
+    position_.x = 640.0F;
+    position_.y = 352.0F;
     speed_ = 4.0F;
     animation_no_ = 0;
     animation_counter_ = 0;
@@ -27,6 +31,11 @@ Player::Player()
     rect.right = 64L;
     rect.bottom = 96L;
     direction_ = 0;
+    key_counter_ = 0;
+    move_ = false;
+    move_counter_ = 0;
+    masu_position_x_ = 10;
+    masu_position_y_ = 6;
 }
 
 // デストラクタ
@@ -73,45 +82,111 @@ void Player::animation()
 void Player::update( const Keyboard::State* pState )
 {
     // ↓が押されたか
-    if( pState->Down )
+    if( move_ == false && pState->Down)
     {
+        key_counter_++;     // 長押し
+
         direction_ = 0;
-        position_.y += 4.0F;
-    }
 
+        if(key_counter_ >= 8 )
+        {
+            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 230 ) && ( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) >= 230 ) )
+            {
+                masu_position_y_++;
+                move_ = true;
+            }
+        }
+    }
     // ↑が押されたか
-    if( pState->Up )
+    else if( move_ == false && pState->Up )
     {
+        key_counter_++;     // 長押し
+
         direction_ = 1;
-        position_.y -= 4.0F;
-    }
 
+        if( key_counter_ >= 8 )
+        {
+            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth()) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) >= 230) )
+            {
+                masu_position_y_--;
+                move_ = true;
+            }
+        }
+    }
     // →が押されたか
-    if( pState->Right )
+    else if( move_ == false && pState->Right )
     {
+        key_counter_++;     // 長押し
+
         direction_ = 2;
-        position_.x += 4.0F;
-    }
 
+        if( key_counter_ >= 8 )
+        {
+            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) >= 230) )
+            {
+                masu_position_x_++;
+                move_ = true;
+            }
+        }
+    }
     // ←が押されたか
-    if( pState->Left )
+    else if( move_ == false && pState->Left )
     {
-        direction_ = 3;
-        position_.x -= 4.0F;
-    }
+        key_counter_++;     // 長押し
 
+        direction_ = 3;
+
+        if( key_counter_ >= 8 )
+        {
+            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) >= 230) )
+            {
+                masu_position_x_--;
+                move_ = true;
+            }
+        }
+    }
+    
     // どれも押されていない
-    if( !(pState->Down || pState->Up || pState->Right || pState->Left) )
+    if(move_ == false && !(pState->Down || pState->Up || pState->Right || pState->Left) )
     {
         animation_no_ = 0;
+        key_counter_ = 0;
     }
-    else
+
+    if( move_ )
     {
         animation();
+
+        // ↓が押されたか
+        switch( direction_ )
+        {
+        case 0:
+            Field::move_y( 4.0F );
+            break;
+        // ↑が押されたか
+        case 1:
+            Field::move_y( -4.0F );
+            break;
+        // →が押されたか
+        case 2:
+            Field::move_x( 4.0F );
+            break;
+        // ←が押されたか
+        case 3:
+            Field::move_x( -4.0F );
+            break;
+        }
+
+        move_counter_++;
+
+        if( move_counter_ >= 16 )
+        {
+            move_counter_ = 0;
+            move_ = false;
+        }
     }
 
     // 壁をつなぐ
-
     if( position_.x < -64.0F )
     {
         position_.x = 1280.0F;
