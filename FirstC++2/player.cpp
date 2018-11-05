@@ -34,8 +34,13 @@ Player::Player()
     key_counter_ = 0;
     move_ = false;
     move_counter_ = 0;
+    dash_ = false;
     masu_position_x_ = 10;
     masu_position_y_ = 6;
+
+    jump_down_flag_ = false;               // ジャンプフラグ下
+    jump_right_flag_ = false;              // ジャンプフラグ右
+    jump_left_flag_ = false;               // ジャンプフラグ左
 }
 
 // デストラクタ
@@ -76,21 +81,34 @@ void Player::animation()
             animation_no_ = 0;
     }
     animation_counter_++;
+    if( dash_ || jump_down_flag_ || jump_left_flag_ || jump_right_flag_ )
+        animation_counter_++;
 }
 
 // 更新処理
 void Player::update( const Keyboard::State* pState )
 {
+    // 左shiftが押されたか
+    if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState->Down || pState->Up || pState->Right || pState->Left) && pState->LeftShift )
+    {
+        dash_ = true;
+    }
+
     // ↓が押されたか
-    if( move_ == false && pState->Down)
+    if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Down )
     {
         key_counter_++;     // 長押し
 
         direction_ = 0;
 
-        if(key_counter_ >= 8 )
+        if( key_counter_ >= 8 )
         {
-            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 230 ) && ( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) >= 230 ) )
+            if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 128 && Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 130 )
+            {
+                masu_position_y_+= 2;
+                jump_down_flag_ = true;
+            }
+            else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 230 ) && ( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) >= 230 ) )
             {
                 masu_position_y_++;
                 move_ = true;
@@ -98,7 +116,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // ↑が押されたか
-    else if( move_ == false && pState->Up )
+    else if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Up )
     {
         key_counter_++;     // 長押し
 
@@ -114,7 +132,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // →が押されたか
-    else if( move_ == false && pState->Right )
+    else if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Right )
     {
         key_counter_++;     // 長押し
 
@@ -130,7 +148,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // ←が押されたか
-    else if( move_ == false && pState->Left )
+    else if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Left )
     {
         key_counter_++;     // 長押し
 
@@ -147,8 +165,9 @@ void Player::update( const Keyboard::State* pState )
     }
     
     // どれも押されていない
-    if(move_ == false && !(pState->Down || pState->Up || pState->Right || pState->Left) )
+    if(move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState->Down || pState->Up || pState->Right || pState->Left || pState->LeftShift) )
     {
+        dash_ = false;
         animation_no_ = 0;
         key_counter_ = 0;
     }
@@ -161,28 +180,93 @@ void Player::update( const Keyboard::State* pState )
         switch( direction_ )
         {
         case 0:
-            Field::move_y( 4.0F );
+            if( dash_ )
+            {
+                Field::move_y( 8.0F );
+            }
+            else
+            {
+                Field::move_y( 4.0F );
+            }
             break;
         // ↑が押されたか
         case 1:
-            Field::move_y( -4.0F );
+            if( dash_ )
+            {
+                Field::move_y( -8.0F );
+            }
+            else
+            {
+                Field::move_y( -4.0F );
+            }
             break;
         // →が押されたか
         case 2:
-            Field::move_x( 4.0F );
+            if( dash_ )
+            {
+                Field::move_x( 8.0F );
+            }
+            else
+            {
+                Field::move_x( 4.0F );
+            }
             break;
         // ←が押されたか
         case 3:
-            Field::move_x( -4.0F );
+            if( dash_ )
+            {
+                Field::move_x( -8.0F );
+            }
+            else
+            {
+                Field::move_x( -4.0F );
+            }
             break;
         }
 
         move_counter_++;
 
-        if( move_counter_ >= 16 )
+        if( dash_ )
+        {
+            if( move_counter_ >= 8 )
+            {
+                move_counter_ = 0;
+                move_ = false;
+                if( (!pState->LeftShift && (pState->Down || pState->Up || pState->Right || pState->Left)) || !(pState->Down || pState->Up || pState->Right || pState->Left) )
+                    dash_ = false;
+            }
+        }
+        else
+        {
+            if( move_counter_ >= 16 )
+            {
+                move_counter_ = 0;
+                move_ = false;
+            }
+        }
+    }
+
+    if( jump_down_flag_ )
+    {
+        animation();
+
+        Field::move_y( 4.0F );
+
+        move_counter_++;
+
+        if( move_counter_ <= 20 )
+        {
+            position_.y+=4;
+        }
+        else
+        {
+            position_.y-=12;
+        }
+
+        if( move_counter_ >= 32 )
         {
             move_counter_ = 0;
-            move_ = false;
+            jump_down_flag_ = false;
         }
     }
 
@@ -209,7 +293,7 @@ void Player::update( const Keyboard::State* pState )
 void Player::draw()
 {
     // 描画範囲の設定
-    rect.top    = direction_ * kPlayersizeY; /*+ hakase*/;
+    rect.top = direction_ * kPlayersizeY + (dash_ ? 384 : 0);
     rect.left   = animation_no_ * kPlayersizeX + haruka;
     rect.right  = rect.left + kPlayersizeX;
     rect.bottom = rect.top + kPlayersizeY;

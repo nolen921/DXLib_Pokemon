@@ -23,6 +23,10 @@ private:
     int key_counter_;                   // 入力用ループカウンター
     bool move_;                         // 移動中フラグ0/1
     int move_counter_;                  // 移動用ループカウンター
+    bool dash_;                         // ダッシュフラグ0/1
+    bool jump_down_flag_;               // ジャンプフラグ下
+    bool jump_right_flag_;              // ジャンプフラグ右
+    bool jump_left_flag_;               // ジャンプフラグ左
     static int masu_position_x_, masu_position_y_;         // マス単位の座標
 
 public:
@@ -39,6 +43,9 @@ public:
     static int getMasuPositionX() { return masu_position_x_; }
     // マス単位のプレイヤーY座標を取得
     static int getMasuPositionY() { return masu_position_y_; }
+
+    // dash_を返す関数
+    bool getDash() { return dash_; }
 
     // 描画
     void draw();

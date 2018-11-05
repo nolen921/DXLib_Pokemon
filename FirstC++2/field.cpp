@@ -19,6 +19,7 @@ Field::Field()
     height_ = 0;
     offset_x_ = 0.0F;
     offset_y_ = 0.0F;
+    index_ = 0;
 }
 
 // èâä˙âª
@@ -131,8 +132,8 @@ int Field::getMapHeight()
 
 int Field::getIndex()
 {
-    int x = static_cast<int>(offset_x_ / 64 + 9);
-    int y = static_cast<int>(offset_y_ / 64 + 5);
+    int x = static_cast<int>(offset_x_ / 64 + 10);
+    int y = static_cast<int>(offset_y_ / 64 + 6);
     index_ = (y*width_) + x;
 
     return index_;
@@ -152,8 +153,9 @@ void Field::draw(int n)
             continue;
         }
 
+        getIndex();
         XMVECTORF32 color = Colors::White;
-        if( i == ((offset_y_ / 64 + 6)* width_) + (offset_x_ / 64 + 10) )
+        if( i == index_ /*((offset_y_ / 64 + 6)* width_) + (offset_x_ / 64 + 10)*/ )
             color = Colors::Red;
 
         Sprite::draw( texture_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
