@@ -183,11 +183,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 // フィールド描画1
                 field.draw( 0 );
 
+                field.draw( 1 );
+
+                field.draw( 3 );
+
                 // プレイヤー描画
                 player.draw();
 
                 // フィールド描画2
-                field.draw( 1 );
+                field.draw( 2 );
 
                 // スプライト描画終了
                 // sprite.End();

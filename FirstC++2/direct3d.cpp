@@ -116,7 +116,7 @@ void Direct3D::destroy()
 // ‰æ–ÊƒNƒŠƒAŠÖ”
 void Direct3D::clear()
 {
-    float color[] = { 0.3F,0.8F,0.5F,1.0F };    // RGB‚ð0.0`1.0‚ÌŠÔ‚ÅÝ’è
+    float color[] = { 0.0F,0.0F,0.0F,1.0F };    // RGB‚ð0.0`1.0‚ÌŠÔ‚ÅÝ’è
     device_context_->ClearRenderTargetView( render_target_view_, color );
 }
 

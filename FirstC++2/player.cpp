@@ -41,6 +41,8 @@ Player::Player()
     jump_down_flag_ = false;               // ジャンプフラグ下
     jump_right_flag_ = false;              // ジャンプフラグ右
     jump_left_flag_ = false;               // ジャンプフラグ左
+
+    collision_ = false;
 }
 
 // デストラクタ
@@ -91,7 +93,7 @@ void Player::update( const Keyboard::State* pState )
     // 左shiftが押されたか
     if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState->Down || pState->Up || pState->Right || pState->Left) && pState->LeftShift )
     {
-        dash_ = true;
+        dash_ = true;   
     }
 
     // ↓が押されたか
@@ -113,6 +115,11 @@ void Player::update( const Keyboard::State* pState )
                 masu_position_y_++;
                 move_ = true;
             }
+            else
+            {
+                collision_ = true;
+                animation();
+            }
         }
     }
     // ↑が押されたか
@@ -129,6 +136,11 @@ void Player::update( const Keyboard::State* pState )
                 masu_position_y_--;
                 move_ = true;
             }
+            else
+            {
+                collision_ = true;
+                animation();
+            }
         }
     }
     // →が押されたか
@@ -138,12 +150,22 @@ void Player::update( const Keyboard::State* pState )
 
         direction_ = 2;
 
-        if( key_counter_ >= 8 )
+        if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) == 100 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) == 116 )
+        {
+            masu_position_x_ += 2;
+            jump_right_flag_ = true;
+        }
+        else if( key_counter_ >= 8 )
         {
             if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) >= 230) )
             {
                 masu_position_x_++;
                 move_ = true;
+            }
+            else
+            {
+                collision_ = true;
+                animation();
             }
         }
     }
@@ -156,16 +178,26 @@ void Player::update( const Keyboard::State* pState )
 
         if( key_counter_ >= 8 )
         {
-            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) >= 230) )
+            if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ -1 ) == 99 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ -1 ) == 115 )
+            {
+                masu_position_x_ -= 2;
+                jump_left_flag_ = true;
+            }
+            else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) >= 230) )
             {
                 masu_position_x_--;
                 move_ = true;
+            }
+            else
+            {
+                collision_ = true;
+                animation();
             }
         }
     }
     
     // どれも押されていない
-    if(move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState->Down || pState->Up || pState->Right || pState->Left || pState->LeftShift) )
+    if(move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState->Down || pState->Up || pState->Right || pState->Left ) )
     {
         dash_ = false;
         animation_no_ = 0;
@@ -232,7 +264,7 @@ void Player::update( const Keyboard::State* pState )
             {
                 move_counter_ = 0;
                 move_ = false;
-                if( (!pState->LeftShift && (pState->Down || pState->Up || pState->Right || pState->Left)) || !(pState->Down || pState->Up || pState->Right || pState->Left) )
+                if( (!pState->LeftShift) || !(pState->Down || pState->Up || pState->Right || pState->Left) )
                     dash_ = false;
             }
         }
@@ -248,19 +280,21 @@ void Player::update( const Keyboard::State* pState )
 
     if( jump_down_flag_ )
     {
+        dash_ = false;
+
         animation();
 
         Field::move_y( 4.0F );
 
         move_counter_++;
 
-        if( move_counter_ <= 20 )
+        if( move_counter_ <= 12 )
         {
-            position_.y+=4;
+            position_.y -= 5;
         }
         else
         {
-            position_.y-=12;
+            position_.y += 3;
         }
 
         if( move_counter_ >= 32 )
@@ -269,6 +303,57 @@ void Player::update( const Keyboard::State* pState )
             jump_down_flag_ = false;
         }
     }
+    else if( jump_right_flag_ )
+    {
+        dash_ = false;
+
+        animation();
+
+        Field::move_x( 4.0F );
+
+        move_counter_++;
+
+        if( move_counter_ <= 12 )
+        {
+            position_.y -= 5;
+        }
+        else
+        {
+            position_.y += 3;
+        }
+
+        if( move_counter_ >= 32 )
+        {
+            move_counter_ = 0;
+            jump_right_flag_ = false;
+        }
+    }
+    else if( jump_left_flag_ )
+    {
+        dash_ = false;
+
+        animation();
+
+        Field::move_x( -4.0F );
+
+        move_counter_++;
+
+        if( move_counter_ <= 12 )
+        {
+            position_.y -= 5;
+        }
+        else
+        {
+            position_.y += 3;
+        }
+
+        if( move_counter_ >= 32 )
+        {
+            move_counter_ = 0;
+            jump_left_flag_ = false;
+        }
+    }
+
 
     // 壁をつなぐ
     if( position_.x < -64.0F )
@@ -293,7 +378,7 @@ void Player::update( const Keyboard::State* pState )
 void Player::draw()
 {
     // 描画範囲の設定
-    rect.top = direction_ * kPlayersizeY + (dash_ ? 384 : 0);
+    rect.top = direction_ * kPlayersizeY + (dash_ ? 384L : 0L);
     rect.left   = animation_no_ * kPlayersizeX + haruka;
     rect.right  = rect.left + kPlayersizeX;
     rect.bottom = rect.top + kPlayersizeY;
@@ -316,6 +401,16 @@ void Player::draw()
 
     // 描画
     Sprite::draw( texture_, position_, &rect );     // ヘッダーにデフォルト引数を入れたため省略
+
+    if( jump_down_flag_ || jump_right_flag_ || jump_left_flag_ )
+    {
+        rect.top = 992L;
+        rect.left = 0L;
+        rect.right = rect.left + 64L;
+        rect.bottom = rect.top + 32L;
+
+        Sprite::draw( texture_, Vector2( position_.x, 428.0F ) , &rect );
+    }
 }
 
 // 破棄

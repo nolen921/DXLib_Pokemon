@@ -10,6 +10,11 @@ int Field::width_;
 int Field::height_;
 int Field::LayerCount_;
 
+Parts* Field::pokecen_parts_;
+int Field::pokecen_width_;
+int Field::pokecen_height_;
+int Field::Pokecen_LayerCount_;
+
 // コンストラクタ
 Field::Field()
 {
@@ -26,7 +31,14 @@ Field::Field()
 bool Field::init()
 {
     // テクスチャの読み込み
-    if(!(texture_ = Texture::load( L"pokemon_rse.png" )))
+    if(!(texture_ = Texture::load( L"pokemon_rse2.png" )))
+    {
+        // エラー
+        return false;
+    }
+
+    // ポケセンテクスチャの読み込み
+    if( !(texture2_ = Texture::load( L"pokemon_center.png" )) )
     {
         // エラー
         return false;
@@ -84,8 +96,16 @@ bool Field::init()
             parts_[ j ].trim.bottom = parts_[ j ].trim.top + 64L;
 
             // 座標設定
-            parts_[ j ].position.x = static_cast<float>(64.0F * (j % width_));
-            parts_[ j ].position.y = static_cast<float>(64.0F * ((j % (width_ * height_)) / width_));
+            if( i <= 2 )
+            {
+                parts_[ j ].position.x = static_cast<float>(64.0F * (j % width_));
+                parts_[ j ].position.y = static_cast<float>(64.0F * ((j % (width_ * height_)) / width_));
+            }
+            else
+            {
+                parts_[ j ].position.x = static_cast<float>(64.0F * (j % width_)) + POKECEN_POS;
+                parts_[ j ].position.y = static_cast<float>(64.0F * ((j % (width_ * height_)) / width_));
+            }
         }
     }
 
@@ -140,25 +160,43 @@ int Field::getIndex()
 }
 
 // 描画
-void Field::draw(int n)
+void Field::draw( int layer )
 {
-    for( int i = width_ * height_ * n; i < width_ * height_ * (n+1); i++ )
+    
+    for( int i = width_ * height_ * layer; i < width_ * height_ * (layer + 1); i++ )
     {
-        if( i % width_ <= Player::getMasuPositionX() - 10 || i % width_ >= Player::getMasuPositionX() + 9 )
-        {
-            continue;
-        }
-        if( i % (width_ * height_) / width_ <= Player::getMasuPositionY() - 6 || i % (width_ * height_) / width_ >= Player::getMasuPositionY() + 4 )
-        {
-            continue;
-        }
 
         getIndex();
         XMVECTORF32 color = Colors::White;
-        if( i == index_ /*((offset_y_ / 64 + 6)* width_) + (offset_x_ / 64 + 10)*/ )
-            color = Colors::Red;
+        //if( i == index_ /*((offset_y_ / 64 + 6)* width_) + (offset_x_ / 64 + 10)*/ )
+            //color = Colors::Red;
 
-        Sprite::draw( texture_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
+        if( layer <= 2 )
+        {
+            if( i % width_ <= Player::getMasuPositionX() - 11 || i % width_ >= Player::getMasuPositionX() + 10 )
+            {
+                continue;
+            }
+            if( i % (width_ * height_) / width_ <= Player::getMasuPositionY() - 7 || i % (width_ * height_) / width_ >= Player::getMasuPositionY() + 5 )
+            {
+                continue;
+            }
+
+            Sprite::draw( texture_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
+        }
+        else
+        {
+            if( i % width_ <= Player::getMasuPositionX() - 11 - (POKECEN_POS/64) || i % width_ >= Player::getMasuPositionX() + 10 - (POKECEN_POS / 64) )
+            {
+                continue;
+            }
+            if( i % (width_ * height_) / width_ <= Player::getMasuPositionY() - 7 || i % (width_ * height_) / width_ >= Player::getMasuPositionY() + 5 )
+            {
+                continue;
+            }
+
+            Sprite::draw( texture2_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
+        }
     }
 }
 
@@ -168,6 +206,10 @@ void Field::destroy()
     // テクスチャの解放
     texture_->Release();
 
+    texture2_->Release();
+
     // メモリの開放
     delete[] parts_;
+
+    delete[] pokecen_parts_;
 }

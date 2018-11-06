@@ -28,6 +28,7 @@ private:
     bool jump_right_flag_;              // ジャンプフラグ右
     bool jump_left_flag_;               // ジャンプフラグ左
     static int masu_position_x_, masu_position_y_;         // マス単位の座標
+    bool collision_;                    // 衝突している
 
 public:
     Player();                           // コンストラクタ

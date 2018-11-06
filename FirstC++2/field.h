@@ -1,5 +1,7 @@
 #pragma once
 
+#define POKECEN_POS 7040.0F
+
 #include"direct3d.h"
 #include"sprite.h"
 
@@ -26,9 +28,13 @@ class Field
 {
 private:
     ID3D11ShaderResourceView* texture_;         // テクスチャ
+    ID3D11ShaderResourceView* texture2_;        // テクスチャ
     static int width_, height_;                 // マップ横幅縦幅
+    static int pokecen_width_, pokecen_height_; // マップ横幅縦幅
     static int LayerCount_;                     // レイヤー数
+    static int Pokecen_LayerCount_;             // ポケセンレイヤー数
     static Parts* parts_;                       // パーツ構造体ポインタ
+    static Parts* pokecen_parts_;            // ポケセンパーツ構造体ポインタ
     static float offset_x_, offset_y_;          // スクロール用
     int index_;                                 // 足元のパーツ番号
 
@@ -45,6 +51,6 @@ public:
     int getIndex();                         // インデックスを取得
     float getOffsetX() { return offset_x_; }  // オフセットxを取得
     float getOffsetY() { return offset_y_; }  // オフセットyを取得
-    void draw(int n);                       // 描画
+    void draw(int layer);                   // 描画
     void destroy();                         // 破棄
 };
