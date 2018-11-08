@@ -2,6 +2,7 @@
 #include"texture.h"
 #include"sprite.h"
 #include"field.h"
+#include "pad.h"
 
 /* pokemon_charの大きさ */
 int kPlayertop = 0L;
@@ -43,6 +44,7 @@ Player::Player()
     jump_left_flag_ = false;               // ジャンプフラグ左
 
     collision_ = false;
+    enterPokecen_ = false;
 }
 
 // デストラクタ
@@ -90,14 +92,17 @@ void Player::animation()
 // 更新処理
 void Player::update( const Keyboard::State* pState )
 {
+    // コントローラ入力を取得
+    const GamePad::State pad = Pad::getstate();
+
     // 左shiftが押されたか
-    if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState->Down || pState->Up || pState->Right || pState->Left) && pState->LeftShift )
+    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState->Down || pState->Up || pState->Right || pState->Left) && pState->LeftShift )
     {
         dash_ = true;   
     }
 
     // ↓が押されたか
-    if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Down )
+    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState->Down || pad.dpad.down ) )
     {
         key_counter_++;     // 長押し
 
@@ -105,6 +110,7 @@ void Player::update( const Keyboard::State* pState )
 
         if( key_counter_ >= 8 )
         {
+
             if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 128 && Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 130 )
             {
                 masu_position_y_+= 2;
@@ -123,7 +129,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // ↑が押されたか
-    else if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Up )
+    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Up )
     {
         key_counter_++;     // 長押し
 
@@ -131,7 +137,12 @@ void Player::update( const Keyboard::State* pState )
 
         if( key_counter_ >= 8 )
         {
-            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth()) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) >= 230) )
+            if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() ) == 153 )
+            {
+                enterPokecen_ = true;
+                dash_ = false;
+            }
+            else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth()) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) >= 230) )
             {
                 masu_position_y_--;
                 move_ = true;
@@ -144,7 +155,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // →が押されたか
-    else if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Right )
+    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Right )
     {
         key_counter_++;     // 長押し
 
@@ -170,7 +181,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // ←が押されたか
-    else if( move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Left )
+    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Left )
     {
         key_counter_++;     // 長押し
 
@@ -197,7 +208,7 @@ void Player::update( const Keyboard::State* pState )
     }
     
     // どれも押されていない
-    if(move_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState->Down || pState->Up || pState->Right || pState->Left ) )
+    if(move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState->Down || pState->Up || pState->Right || pState->Left ) && !(pState->Down || pState->Up || pState->Right || pState->Left) )
     {
         dash_ = false;
         animation_no_ = 0;
@@ -355,23 +366,40 @@ void Player::update( const Keyboard::State* pState )
     }
 
 
-    // 壁をつなぐ
-    if( position_.x < -64.0F )
+    // ポケモンセンターに入る処理
+    if( enterPokecen_ )
     {
-        position_.x = 1280.0F;
+        move_counter_++;
+        
+        if( move_counter_ <= 32 )
+        {
+            if( move_counter_ % 16 == 0 )
+            {
+                Field::setPartsTrim( Field::getIndex() - Field::getMapWidth(), 64, 64, 0, 0 );
+                Field::setPartsTrim( Field::getIndex() - (Field::getMapWidth() * 2), 64, 64, 0, 0 );
+            }
+        }
+        else if( move_counter_ <= 48 )
+        {
+            animation();
+            Field::move_y( -4.0F );
+        }
+        else
+        {
+            Field::set_x( 80 * 64.0F );
+            Field::set_y( 5 * 64.0F );
+
+
+            Field::setPartsTrim( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth(), -128, -128, 0, 0 );
+            Field::setPartsTrim( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - (Field::getMapWidth() * 2), -128, -128, 0, 0 );
+
+            masu_position_x_ = 90;
+            masu_position_y_ = 11;
+            enterPokecen_ = false;
+            move_counter_ = 0;
+        }
     }
-    if( position_.x > 1280.0F )
-    {
-        position_.x = -64.0F;
-    }
-    if( position_.y < -96.0F )
-    {
-        position_.y = 720.0F;
-    }
-    if( position_.y > 720.0F )
-    {
-        position_.y = -96.0F;
-    }
+
 }
 
 // 描画

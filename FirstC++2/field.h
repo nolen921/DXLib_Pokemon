@@ -34,9 +34,8 @@ private:
     static int LayerCount_;                     // レイヤー数
     static int Pokecen_LayerCount_;             // ポケセンレイヤー数
     static Parts* parts_;                       // パーツ構造体ポインタ
-    static Parts* pokecen_parts_;            // ポケセンパーツ構造体ポインタ
     static float offset_x_, offset_y_;          // スクロール用
-    int index_;                                 // 足元のパーツ番号
+    static int index_;                          // 足元のパーツ番号
 
 public:
     Field();        // コンストラクタ
@@ -44,11 +43,14 @@ public:
     bool init();    // 初期化
     static void move_x( const float x );    // 更新
     static void move_y( const float y );    // 更新
+    static void set_x( const float x );     // 指定のオフセットにする
+    static void set_y( const float y );     // 指定のオフセットにする
     static int getPartsId( int i );         // パーツ番号を取得
+    static void setPartsTrim( int i, int l, int r, int t, int b );       // パーツの描画範囲を設定
     static int getLayer( int i );           // レイヤー番号を取得
     static int getMapWidth();               // マップ横幅を取得
     static int getMapHeight();              // マップ縦幅を取得
-    int getIndex();                         // インデックスを取得
+    static int getIndex();                  // インデックスを取得
     float getOffsetX() { return offset_x_; }  // オフセットxを取得
     float getOffsetY() { return offset_y_; }  // オフセットyを取得
     void draw(int layer);                   // 描画

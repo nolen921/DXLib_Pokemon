@@ -11,6 +11,7 @@
 #include"common.h"
 #include"key.h"
 #include"field.h"
+#include"pad.h"
 
 #include<cstdio>
 #include<ctime>
@@ -171,6 +172,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 //Keyboard::State keystate = key.GetState();
                 Key::update();
 
+                Pad::update();
+
                 // プレイヤークラス更新
                 player.update( Key::getNyuryoku() );
 
@@ -181,9 +184,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 Sprite::begin();
 
                 // フィールド描画1
-                field.draw( 0 );
-
                 field.draw( 1 );
+
+                field.draw( 0 );
 
                 field.draw( 3 );
 

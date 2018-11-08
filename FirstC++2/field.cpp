@@ -9,14 +9,15 @@ float Field::offset_y_;
 int Field::width_;
 int Field::height_;
 int Field::LayerCount_;
+int Field::index_;
 
-Parts* Field::pokecen_parts_;
 int Field::pokecen_width_;
 int Field::pokecen_height_;
 int Field::Pokecen_LayerCount_;
 
 // コンストラクタ
 Field::Field()
+
 {
     texture_ = NULL;
     parts_ = NULL;
@@ -103,7 +104,7 @@ bool Field::init()
             }
             else
             {
-                parts_[ j ].position.x = static_cast<float>(64.0F * (j % width_)) + POKECEN_POS;
+                parts_[ j ].position.x = static_cast<float>(64.0F * (j % width_));
                 parts_[ j ].position.y = static_cast<float>(64.0F * ((j % (width_ * height_)) / width_));
             }
         }
@@ -126,10 +127,30 @@ void Field::move_y( const float y )
     offset_y_ += y;
 }
 
+// 値を指定して更新
+void Field::set_x( const float x )
+{
+    offset_x_ = x;
+}
+
+void Field::set_y( const float y )
+{
+    offset_y_ = y;
+}
+
 // パーツ番号を取得
 int Field::getPartsId(int i)
 {
     return parts_[ i ].id;
+}
+
+// パーツの描画範囲を設定
+void Field::setPartsTrim( int i, int l, int r, int t, int b )
+{
+    parts_[ i ].trim.left += l;
+    parts_[ i ].trim.right += r;
+    parts_[ i ].trim.top += t;
+    parts_[ i ].trim.bottom += b;
 }
 
 // レイヤー番号を取得
@@ -186,7 +207,7 @@ void Field::draw( int layer )
         }
         else
         {
-            if( i % width_ <= Player::getMasuPositionX() - 11 - (POKECEN_POS/64) || i % width_ >= Player::getMasuPositionX() + 10 - (POKECEN_POS / 64) )
+            if( i % width_ <= Player::getMasuPositionX() - 11 || i % width_ >= Player::getMasuPositionX() + 10 )
             {
                 continue;
             }
@@ -210,6 +231,4 @@ void Field::destroy()
 
     // メモリの開放
     delete[] parts_;
-
-    delete[] pokecen_parts_;
 }
