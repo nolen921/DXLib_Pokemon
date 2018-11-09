@@ -5,16 +5,17 @@
 #include<CommonStates.h>
 #include<Keyboard.h>
 
-#include"player.h"
 #include"direct3d.h"
 #include"sprite.h"
 #include"common.h"
 #include"key.h"
-#include"field.h"
 #include"pad.h"
 
 #include<cstdio>
 #include<ctime>
+
+#include "font.h"
+#include "game.h"
 
 using namespace DirectX;
 using namespace SimpleMath;
@@ -106,8 +107,16 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         return 0;
     }
 
-    // Keyboardクラス初期化
-    if( !Key::init() )
+    // ゲームクラス初期化
+    Game game;
+    if( !game.init() )
+    {
+        // エラー
+        return 0;
+    }
+
+    // Fontクラスの初期化
+    if( !Font::init() )
     {
         // エラー
         return 0;
@@ -118,29 +127,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
     // メインループ
     MSG msg = { NULL };
-
-    int num = 1000;
-
-    // プレイヤークラス
-    Player player; /* ループに書かない */
-
-    if( !player.init( L"pokemon_char2.png" ) )
-    {
-        // エラー
-        Key::destroy();
-        Common::destroy();
-        Sprite::destroy();
-        Direct3D::destroy();
-        return 0;
-    }
-
-    // フィールドクラス
-    Field field;
-    if( !field.init() )
-    {
-        // エラー
-        return 0;
-    }
 
     // 時間計測
     DWORD t1, t2, t3 = 0L, dt;
@@ -169,13 +155,13 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 t3 = dt % 16;       // 誤差分を吸収
 
                 // キーボード入力の取得
-                //Keyboard::State keystate = key.GetState();
                 Key::update();
 
+                // ゲームパッド入力の取得
                 Pad::update();
 
-                // プレイヤークラス更新
-                player.update( Key::getNyuryoku() );
+                // ゲームクラスアップデート
+                game.update();
 
                 // 画面クリア関数
                 Direct3D::clear();
@@ -183,21 +169,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 // スプライト描画開始
                 Sprite::begin();
 
-                // フィールド描画1
-                field.draw( 1 );
-
-                field.draw( 0 );
-
-                field.draw( 3 );
-
-                // プレイヤー描画
-                player.draw();
-
-                // フィールド描画2
-                field.draw( 2 );
+                // ゲームクラス描画
+                game.draw();
 
                 // スプライト描画終了
-                // sprite.End();
                 Sprite::end();
 
                 // 描画更新
@@ -210,9 +185,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     CoUninitialize();
 
     // インターフェイスの解放（確保した順の逆に開放していく）
-    field.destroy();
-    player.destroy();
-    Key::destroy();
+    game.destroy();
+    Font::destroy();
     Common::destroy();
     Sprite::destroy();
     Direct3D::destroy();

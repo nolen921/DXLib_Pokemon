@@ -2,6 +2,7 @@
 #include "texture.h"
 #include "sprite.h"
 #include "error.h"
+#include "font.h"
 
 Parts* Field::parts_;
 float Field::offset_x_;
@@ -181,7 +182,7 @@ int Field::getIndex()
 }
 
 // ï`âÊ
-void Field::draw( int layer )
+void Field::draw( int layer, bool drawID )
 {
     
     for( int i = width_ * height_ * layer; i < width_ * height_ * (layer + 1); i++ )
@@ -192,31 +193,37 @@ void Field::draw( int layer )
         //if( i == index_ /*((offset_y_ / 64 + 6)* width_) + (offset_x_ / 64 + 10)*/ )
             //color = Colors::Red;
 
-        if( layer <= 2 )
+        if( i % width_ <= Player::getMasuPositionX() - 11 || i % width_ >= Player::getMasuPositionX() + 10 )
         {
-            if( i % width_ <= Player::getMasuPositionX() - 11 || i % width_ >= Player::getMasuPositionX() + 10 )
-            {
-                continue;
-            }
-            if( i % (width_ * height_) / width_ <= Player::getMasuPositionY() - 7 || i % (width_ * height_) / width_ >= Player::getMasuPositionY() + 5 )
-            {
-                continue;
-            }
+            continue;
+        }
+        if( i % (width_ * height_) / width_ <= Player::getMasuPositionY() - 7 || i % (width_ * height_) / width_ >= Player::getMasuPositionY() + 5 )
+        {
+            continue;
+        }
 
-            Sprite::draw( texture_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
+        if( drawID )
+        {
+            // ç¿ïWÇï`âÊ
+            char str[ 256 ];
+            sprintf( str, "%d", getPartsId( i ) );
+
+            // ÉèÉCÉhï∂éöÇ…ïœä∑
+            wchar_t wstr[ 256 ];
+            mbstowcs( wstr, str, 256 );
+            Font::draw( wstr, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ) );
         }
         else
         {
-            if( i % width_ <= Player::getMasuPositionX() - 11 || i % width_ >= Player::getMasuPositionX() + 10 )
+            if( layer <= 2 )
             {
-                continue;
-            }
-            if( i % (width_ * height_) / width_ <= Player::getMasuPositionY() - 7 || i % (width_ * height_) / width_ >= Player::getMasuPositionY() + 5 )
-            {
-                continue;
-            }
 
-            Sprite::draw( texture2_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
+                Sprite::draw( texture_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
+            }
+            else
+            {
+                Sprite::draw( texture2_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );
+            }
         }
     }
 }

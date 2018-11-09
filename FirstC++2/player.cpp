@@ -3,6 +3,8 @@
 #include"sprite.h"
 #include"field.h"
 #include "pad.h"
+#include "font.h"
+#include "key.h"
 
 /* pokemon_charの大きさ */
 int kPlayertop = 0L;
@@ -85,24 +87,24 @@ void Player::animation()
             animation_no_ = 0;
     }
     animation_counter_++;
-    if( dash_ || jump_down_flag_ || jump_left_flag_ || jump_right_flag_ )
-        animation_counter_++;
 }
 
 // 更新処理
-void Player::update( const Keyboard::State* pState )
+void Player::update()
 {
+
+    const Keyboard::State pState = Key::getState();
     // コントローラ入力を取得
     const GamePad::State pad = Pad::getstate();
 
     // 左shiftが押されたか
-    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState->Down || pState->Up || pState->Right || pState->Left) && pState->LeftShift )
+    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState.Down || pState.Up || pState.Right || pState.Left || pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) && ( pState.LeftShift || pad.buttons.a ) )
     {
-        dash_ = true;   
+        dash_ = true;
     }
 
     // ↓が押されたか
-    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState->Down || pad.dpad.down ) )
+    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Down || pad.dpad.down ) )
     {
         key_counter_++;     // 長押し
 
@@ -113,11 +115,13 @@ void Player::update( const Keyboard::State* pState )
 
             if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 128 && Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 130 )
             {
+                collision_ = false;
                 masu_position_y_+= 2;
                 jump_down_flag_ = true;
             }
             else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 230 ) && ( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) >= 230 ) )
             {
+                collision_ = false;
                 masu_position_y_++;
                 move_ = true;
             }
@@ -129,7 +133,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // ↑が押されたか
-    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Up )
+    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Up || pad.dpad.up ) )
     {
         key_counter_++;     // 長押し
 
@@ -139,11 +143,13 @@ void Player::update( const Keyboard::State* pState )
         {
             if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() ) == 153 )
             {
+                collision_ = false;
                 enterPokecen_ = true;
                 dash_ = false;
             }
             else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth()) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - Field::getMapWidth() + 10000 ) >= 230) )
             {
+                collision_ = false;
                 masu_position_y_--;
                 move_ = true;
             }
@@ -155,21 +161,23 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // →が押されたか
-    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Right )
+    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Right || pad.dpad.right ) )
     {
         key_counter_++;     // 長押し
 
         direction_ = 2;
 
-        if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) == 100 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) == 116 )
+        if( key_counter_ >= 8 )
         {
-            masu_position_x_ += 2;
-            jump_right_flag_ = true;
-        }
-        else if( key_counter_ >= 8 )
-        {
-            if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) >= 230) )
+            if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) == 100 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) == 116 )
             {
+                collision_ = false;
+                masu_position_x_ += 2;
+                jump_right_flag_ = true;
+            }
+            else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) >= 230) )
+            {
+                collision_ = false;
                 masu_position_x_++;
                 move_ = true;
             }
@@ -181,7 +189,7 @@ void Player::update( const Keyboard::State* pState )
         }
     }
     // ←が押されたか
-    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && pState->Left )
+    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Left || pad.dpad.left ) )
     {
         key_counter_++;     // 長押し
 
@@ -191,11 +199,13 @@ void Player::update( const Keyboard::State* pState )
         {
             if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ -1 ) == 99 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ -1 ) == 115 )
             {
+                collision_ = false;
                 masu_position_x_ -= 2;
                 jump_left_flag_ = true;
             }
             else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) >= 230) )
             {
+                collision_ = false;
                 masu_position_x_--;
                 move_ = true;
             }
@@ -208,11 +218,16 @@ void Player::update( const Keyboard::State* pState )
     }
     
     // どれも押されていない
-    if(move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState->Down || pState->Up || pState->Right || pState->Left ) && !(pState->Down || pState->Up || pState->Right || pState->Left) )
+    if(move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState.Down || pState.Up || pState.Right || pState.Left ) && !(pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) )
     {
         dash_ = false;
         animation_no_ = 0;
         key_counter_ = 0;
+    }
+
+    if( collision_ == true )
+    {
+        dash_ = false;
     }
 
     if( move_ )
@@ -275,7 +290,7 @@ void Player::update( const Keyboard::State* pState )
             {
                 move_counter_ = 0;
                 move_ = false;
-                if( (!pState->LeftShift) || !(pState->Down || pState->Up || pState->Right || pState->Left) )
+                if( !(pState.LeftShift || pad.buttons.a) || !(pState.Down || pState.Up || pState.Right || pState.Left || pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) )
                     dash_ = false;
             }
         }
@@ -288,6 +303,10 @@ void Player::update( const Keyboard::State* pState )
             }
         }
     }
+
+
+    if( dash_ || jump_down_flag_ || jump_left_flag_ || jump_right_flag_ )
+        animation_counter_++;
 
     if( jump_down_flag_ )
     {
@@ -439,6 +458,15 @@ void Player::draw()
 
         Sprite::draw( texture_, Vector2( position_.x, 428.0F ) , &rect );
     }
+
+    // 座標を描画
+    char str[ 256 ];
+    sprintf( str, "position.x = %.1f\nposition.y = %.1f", position_.x, position_.y );
+
+    // ワイド文字に変換
+    wchar_t wstr[ 256 ];
+    mbstowcs( wstr, str, 256 );
+    //Font::draw( wstr, Vector2::Zero );
 }
 
 // 破棄

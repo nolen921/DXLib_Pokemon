@@ -53,6 +53,6 @@ public:
     static int getIndex();                  // インデックスを取得
     float getOffsetX() { return offset_x_; }  // オフセットxを取得
     float getOffsetY() { return offset_y_; }  // オフセットyを取得
-    void draw(int layer);                   // 描画
+    void draw(int layer, bool drawID );                   // 描画
     void destroy();                         // 破棄
 };

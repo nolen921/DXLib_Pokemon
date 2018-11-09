@@ -39,7 +39,7 @@ public:
     bool init( const wchar_t* FileName );
 
     // 更新処理
-    void update(const Keyboard::State* pState);
+    void update();
 
     // マス単位のプレイヤーX座標を取得
     static int getMasuPositionX() { return masu_position_x_; }

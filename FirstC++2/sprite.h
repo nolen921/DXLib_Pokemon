@@ -33,4 +33,7 @@ public:
         const Vector2& Origin = Vector2( 0.0F, 0.0F ),      // アンカーポイント
         const SpriteEffects Effect = SpriteEffects_None,    // エフェクト
         const float Depth = 0.0F );                         // 深度
+
+    // SpriteBatchポインタを返す
+    static SpriteBatch* getSprite() { return sprite_; }
 };

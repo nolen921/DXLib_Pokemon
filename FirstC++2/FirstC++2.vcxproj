@@ -145,6 +145,8 @@
     <ClCompile Include="direct3d.cpp" />
     <ClCompile Include="error.cpp" />
     <ClCompile Include="field.cpp" />
+    <ClCompile Include="font.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="key.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
@@ -163,6 +165,8 @@
     <ClInclude Include="direct3d.h" />
     <ClInclude Include="error.h" />
     <ClInclude Include="field.h" />
+    <ClInclude Include="font.h" />
+    <ClInclude Include="game.h" />
     <ClInclude Include="key.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
