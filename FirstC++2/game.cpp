@@ -1,6 +1,18 @@
 #include "game.h"
 #include "key.h"
 
+// コンストラクタ
+Game::Game()
+{
+
+}
+
+// デストラクタ
+Game::~Game()
+{
+
+}
+
 // 初期化
 bool Game::init()
 {
@@ -12,9 +24,20 @@ bool Game::init()
 }
 
 // 更新
-void Game::update()
+bool Game::update()
 {
+    const Keyboard::State key = Key::getState();
+
+    // Tが押されたらタイトル画面に戻る
+    if( key.T )
+    {
+        return false;
+    }
+
+
     player_.update();
+
+    return true;
 }
 
 // 描画

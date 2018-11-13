@@ -4,6 +4,7 @@
 #include<WICTextureLoader.h>
 #include<SimpleMath.h>
 #include<Keyboard.h>
+#include"release.h"
 
 using namespace DirectX;
 using namespace SimpleMath;
@@ -16,6 +17,8 @@ private:
     Vector2 position_;                  // 座標
     float speed_;                       // 移動速度
     RECT rect;                          // 描画範囲
+    float scale_;                       // スケール値
+    SpriteEffects flip_;                // 反転
     void animation();
     int animation_no_;                  // テクスチャの番号
     int animation_counter_;             // アニメーション用ループカウント

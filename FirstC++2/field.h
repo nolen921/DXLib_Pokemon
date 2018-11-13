@@ -4,6 +4,7 @@
 
 #include"direct3d.h"
 #include"sprite.h"
+#include"release.h"
 
 // \‘¢‘Ì
 struct Parts

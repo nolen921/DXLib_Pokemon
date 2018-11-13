@@ -27,8 +27,8 @@ void Sprite::draw(
     const RECT* Rect,                   // 描画範囲
     const XMVECTORF32& Color,           // カラー
     const float Rotation,               // 回転
-    const Vector2& Scale,               // 拡縮
     const Vector2& Origin,              // アンカーポイント
+    const float Scale,                  // 拡縮
     const SpriteEffects Effect,         // エフェクト,
     const float Depth )                 // 深度
 {

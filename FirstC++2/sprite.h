@@ -29,8 +29,8 @@ public:
         const RECT* Rect = NULL,                            // 描画範囲
         const XMVECTORF32& Color = Colors::White,           // カラー
         const float Rotation = 0.0F,                        // 回転
-        const Vector2& Scale = Vector2( 1.0F, 1.0F ),       // 拡縮
         const Vector2& Origin = Vector2( 0.0F, 0.0F ),      // アンカーポイント
+        const float Scale = 1.0F,                           // 拡縮
         const SpriteEffects Effect = SpriteEffects_None,    // エフェクト
         const float Depth = 0.0F );                         // 深度
 

@@ -3,22 +3,32 @@
 #include<SpriteBatch.h>
 #include<SimpleMath.h>
 #include<CommonStates.h>
-#include<Keyboard.h>
 
 #include"direct3d.h"
 #include"sprite.h"
 #include"common.h"
 #include"key.h"
 #include"pad.h"
+#include"mouse.h"
 
 #include<cstdio>
 #include<ctime>
 
 #include "font.h"
 #include "game.h"
+#include "title.h"
 
 using namespace DirectX;
 using namespace SimpleMath;
+
+// 列挙体
+enum
+{
+    kTitleInit,     // タイトル画面初期化
+    kTitleUpdate,   // タイトル画面更新(描画)
+    kGameInit,      // ゲーム画面初期化
+    kGameUpdate     // ゲーム画面更新(描画)
+};
 
 // プロトタイプ宣言
 LRESULT CALLBACK WinProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
@@ -107,14 +117,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         return 0;
     }
 
-    // ゲームクラス初期化
-    Game game;
-    if( !game.init() )
-    {
-        // エラー
-        return 0;
-    }
-
     // Fontクラスの初期化
     if( !Font::init() )
     {
@@ -132,6 +134,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     DWORD t1, t2, t3 = 0L, dt;
     t1 = timeGetTime();
     t2 = timeGetTime();
+
+    // 現在の作業番号
+    int work_no = kTitleInit;
+    
+    Title title;
+    Game game;
 
     while( msg.message != WM_QUIT )
     {
@@ -154,14 +162,65 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 t2 = t1;            // 今の時間を前回の時間とする
                 t3 = dt % 16;       // 誤差分を吸収
 
+                //--------------------------------- 更新処理 --------------------------------------------
+
                 // キーボード入力の取得
                 Key::update();
 
                 // ゲームパッド入力の取得
                 Pad::update();
 
-                // ゲームクラスアップデート
-                game.update();
+                // マウス入力の取得
+                MyMouse::update();
+
+                // シーン処理
+                switch( work_no )
+                {
+                case kTitleInit:
+                    // タイトルクラス初期化
+                    if( !title.init() )
+                    {
+                        // エラー
+                        PostQuitMessage( 0 );
+                    }
+
+                    // 次の処理へ
+                    work_no = kTitleUpdate;
+                    break;
+
+                case kTitleUpdate:
+                    // タイトルクラス更新処理
+                    if( !title.update() )
+                    {
+                        // falseが帰ってきたら次のシーンへ
+                        title.destroy();
+                        work_no = kGameInit;
+                    }
+                    break;
+
+                case kGameInit:
+                    // ゲームクラス初期化
+                    if( !game.init() )
+                    {
+                        // エラー
+                        PostQuitMessage( 0 );
+                    }
+
+                    // 次の処理へ
+                    work_no = kGameUpdate;
+                    break;
+
+                case kGameUpdate:
+                    // ゲームクラス更新処理
+                    if( !game.update() )
+                    {
+                        // falseが帰ってきたら次のシーンへ
+                        game.destroy();
+                        work_no = kTitleInit;
+                    }
+                    break;
+
+                }
 
                 // 画面クリア関数
                 Direct3D::clear();
@@ -169,8 +228,16 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
                 // スプライト描画開始
                 Sprite::begin();
 
-                // ゲームクラス描画
-                game.draw();
+                switch( work_no )
+                {
+                case kTitleUpdate:
+                    title.draw();
+                    break;
+
+                case kGameUpdate:
+                    game.draw();
+                    break;
+                }
 
                 // スプライト描画終了
                 Sprite::end();
@@ -184,7 +251,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     // COMライブラリの解放
     CoUninitialize();
 
-    // インターフェイスの解放（確保した順の逆に開放していく）
+    // インターフェイスの解放（確保した順の逆に開放していく
+    title.destroy();
     game.destroy();
     Font::destroy();
     Common::destroy();
@@ -207,7 +275,21 @@ LRESULT CALLBACK WinProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam )
         break;
 
     case WM_ACTIVATEAPP:
+
+    case WM_INPUT:
+    case WM_MOUSEMOVE:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_MOUSEWHEEL:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONUP:
+    case WM_MOUSEHOVER:
         Keyboard::ProcessMessage( Msg, wParam, lParam );
+        Mouse::ProcessMessage( Msg, wParam, lParam );
         break;
 
     case WM_SYSKEYDOWN:

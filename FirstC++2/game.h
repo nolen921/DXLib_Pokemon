@@ -12,8 +12,10 @@ private:
     Field field_;   // フィールドクラス     ←クラス内クラス
 
 public:
+    Game();         // コンストラクタ
+    ~Game();        // デストラクタ
     bool init();    // 初期化
-    void update();  // 更新
+    bool update();  // 更新
     void draw();    // 描画
     void destroy(); // 破棄
 };

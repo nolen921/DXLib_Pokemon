@@ -21,6 +21,7 @@ Field::Field()
 
 {
     texture_ = NULL;
+    texture2_ = NULL;
     parts_ = NULL;
     width_ = 0;
     height_ = 0;
@@ -208,10 +209,12 @@ void Field::draw( int layer, bool drawID )
             char str[ 256 ];
             sprintf( str, "%d", getPartsId( i ) );
 
+            /*
             // ワイド文字に変換
             wchar_t wstr[ 256 ];
             mbstowcs( wstr, str, 256 );
             Font::draw( wstr, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ) );
+            */
         }
         else
         {
@@ -232,10 +235,10 @@ void Field::draw( int layer, bool drawID )
 void Field::destroy()
 {
     // テクスチャの解放
-    texture_->Release();
+    SAFE_RELEASE( texture_ );
 
-    texture2_->Release();
-
+    SAFE_RELEASE( texture2_ );
+    
     // メモリの開放
-    delete[] parts_;
+    SAFE_DELETE_ARRAY( parts_ );
 }

@@ -5,6 +5,7 @@
 #include "pad.h"
 #include "font.h"
 #include "key.h"
+#include "mouse.h"
 
 /* pokemon_charの大きさ */
 int kPlayertop = 0L;
@@ -26,6 +27,8 @@ Player::Player()
     // speed_ = static_cast<float>(rand() % 10) + 2.0F;
     position_.x = 640.0F;
     position_.y = 352.0F;
+    scale_ = 1.0F;              // スケール値
+    flip_ = SpriteEffects_None; // 反転
     speed_ = 4.0F;
     animation_no_ = 0;
     animation_counter_ = 0;
@@ -47,6 +50,9 @@ Player::Player()
 
     collision_ = false;
     enterPokecen_ = false;
+
+    //
+    texture_ = NULL;
 }
 
 // デストラクタ
@@ -92,10 +98,27 @@ void Player::animation()
 // 更新処理
 void Player::update()
 {
-
+    // キーボード入力を取得
     const Keyboard::State pState = Key::getState();
     // コントローラ入力を取得
     const GamePad::State pad = Pad::getstate();
+    // マウス入力を取得
+    const Mouse::State ms = MyMouse::getState();
+
+    // マウス座標にテクスチャを移動
+    // position_.x = static_cast<float>(ms.x);
+    // position_.y = static_cast<float>(ms.y);
+
+    // 左クリックしている間はテクスチャを反転させる
+    if( ms.leftButton ) 
+        flip_ = SpriteEffects_FlipHorizontally;
+
+    // ホイールでサイズ変更
+    // ホイールは以下のような挙動を行います。
+    // マウスホイールを回転したときにカチッと鳴った回数に係数を掛けた数値が報告されます。MicrosoftWindowsプラットフォームの係数は120です。(Microsoftのリファレンスより引用)
+    scale_ = 1.0F + static_cast<float>(ms.scrollWheelValue / 120);
+
+    // mouse.ResetScrollWheelValue();
 
     // 左shiftが押されたか
     if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState.Down || pState.Up || pState.Right || pState.Left || pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) && ( pState.LeftShift || pad.buttons.a ) )
@@ -429,9 +452,6 @@ void Player::draw()
     rect.left   = animation_no_ * kPlayersizeX + haruka;
     rect.right  = rect.left + kPlayersizeX;
     rect.bottom = rect.top + kPlayersizeY;
-
-    Vector2 scale;
-    Vector2 origin;
     
     /*
     Sprite::draw(
@@ -447,7 +467,7 @@ void Player::draw()
     */
 
     // 描画
-    Sprite::draw( texture_, position_, &rect );     // ヘッダーにデフォルト引数を入れたため省略
+    Sprite::draw( texture_, position_, &rect, Colors::White, 0.0F, Vector2::Zero, scale_, flip_ );
 
     if( jump_down_flag_ || jump_right_flag_ || jump_left_flag_ )
     {
@@ -472,5 +492,5 @@ void Player::draw()
 // 破棄
 void Player::destroy()
 {
-    texture_->Release();
+    SAFE_RELEASE( texture_ );
 }
