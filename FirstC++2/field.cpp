@@ -18,7 +18,6 @@ int Field::Pokecen_LayerCount_;
 
 // コンストラクタ
 Field::Field()
-
 {
     texture_ = NULL;
     texture2_ = NULL;
@@ -156,9 +155,9 @@ void Field::setPartsTrim( int i, int l, int r, int t, int b )
 }
 
 // レイヤー番号を取得
-int Field::getLayer( int i )
+int Field::getLayer()
 {
-    return parts_[ i ].layer;
+    return LayerCount_;
 }
 
 // マップ横幅を取得
@@ -209,16 +208,16 @@ void Field::draw( int layer, bool drawID )
             char str[ 256 ];
             sprintf( str, "%d", getPartsId( i ) );
 
-            /*
+            
             // ワイド文字に変換
             wchar_t wstr[ 256 ];
             mbstowcs( wstr, str, 256 );
             Font::draw( wstr, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ) );
-            */
+            
         }
         else
         {
-            if( layer <= 2 )
+            if( layer != 3 )
             {
 
                 Sprite::draw( texture_, Vector2( parts_[ i ].position.x - offset_x_, parts_[ i ].position.y - offset_y_ ), &parts_[ i ].trim, color );

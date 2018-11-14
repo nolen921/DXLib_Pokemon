@@ -50,13 +50,13 @@ void Game::draw()
 
     field_.draw( 3, false );
 
+    field_.draw( 4, false );
+
     // プレイヤー描画
     player_.draw();
 
     // フィールド描画2
     field_.draw( 2, false );
-
-    field_.draw( 0, true );
 }
 
 // 破棄

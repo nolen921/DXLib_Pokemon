@@ -48,7 +48,7 @@ public:
     static void set_y( const float y );     // 指定のオフセットにする
     static int getPartsId( int i );         // パーツ番号を取得
     static void setPartsTrim( int i, int l, int r, int t, int b );       // パーツの描画範囲を設定
-    static int getLayer( int i );           // レイヤー番号を取得
+    static int getLayer();                  // レイヤー数を取得
     static int getMapWidth();               // マップ横幅を取得
     static int getMapHeight();              // マップ縦幅を取得
     static int getIndex();                  // インデックスを取得

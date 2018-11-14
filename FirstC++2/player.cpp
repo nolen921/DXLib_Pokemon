@@ -6,6 +6,8 @@
 #include "font.h"
 #include "key.h"
 #include "mouse.h"
+#include "adx.h"
+#include "collision.h"
 
 /* pokemon_charの大きさ */
 int kPlayertop = 0L;
@@ -15,8 +17,12 @@ int kPlayersizeY = 96L;
 const int haruka = 256;
 const int hakase = 384;
 
+// 実体の作成
+Player Player::player_;
+
 int Player::masu_position_x_;
 int Player::masu_position_y_;
+bool Player::collision_;
 
 // コンストラクタ
 Player::Player()
@@ -44,9 +50,7 @@ Player::Player()
     masu_position_x_ = 10;
     masu_position_y_ = 6;
 
-    jump_down_flag_ = false;               // ジャンプフラグ下
-    jump_right_flag_ = false;              // ジャンプフラグ右
-    jump_left_flag_ = false;               // ジャンプフラグ左
+    jump_switch_ = 0;       // ジャンプスイッチ
 
     collision_ = false;
     enterPokecen_ = false;
@@ -85,14 +89,14 @@ bool Player::init( const wchar_t* FileName )
 
 void Player::animation()
 {
-    if( animation_counter_ >= 12 )
+    if( player_.animation_counter_ >= 12 )
     {
-        animation_counter_ = 0;
-        animation_no_++;
-        if( animation_no_ > 3 )
-            animation_no_ = 0;
+        player_.animation_counter_ = 0;
+        player_.animation_no_++;
+        if( player_.animation_no_ > 3 )
+            player_.animation_no_ = 0;
     }
-    animation_counter_++;
+    player_.animation_counter_++;
 }
 
 // 更新処理
@@ -121,13 +125,13 @@ void Player::update()
     // mouse.ResetScrollWheelValue();
 
     // 左shiftが押されたか
-    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && (pState.Down || pState.Up || pState.Right || pState.Left || pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) && ( pState.LeftShift || pad.buttons.a ) )
+    if( move_ == false && enterPokecen_ == false && jump_switch_ == 0 && (pState.Down || pState.Up || pState.Right || pState.Left || pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) && ( pState.LeftShift || pad.buttons.a ) )
     {
         dash_ = true;
     }
 
     // ↓が押されたか
-    if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Down || pad.dpad.down ) )
+    if( move_ == false && enterPokecen_ == false && jump_switch_ == 0 && ( pState.Down || pad.dpad.down ) )
     {
         key_counter_++;     // 長押し
 
@@ -135,28 +139,11 @@ void Player::update()
 
         if( key_counter_ >= 8 )
         {
-
-            if( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 128 && Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 130 )
-            {
-                collision_ = false;
-                masu_position_y_+= 2;
-                jump_down_flag_ = true;
-            }
-            else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() ) >= 230 ) && ( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + Field::getMapWidth() + 10000 ) >= 230 ) )
-            {
-                collision_ = false;
-                masu_position_y_++;
-                move_ = true;
-            }
-            else
-            {
-                collision_ = true;
-                animation();
-            }
+            Collision::collision( direction_ );
         }
     }
     // ↑が押されたか
-    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Up || pad.dpad.up ) )
+    else if( move_ == false && enterPokecen_ == false && jump_switch_ == 0 && ( pState.Up || pad.dpad.up ) )
     {
         key_counter_++;     // 長押し
 
@@ -184,7 +171,7 @@ void Player::update()
         }
     }
     // →が押されたか
-    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Right || pad.dpad.right ) )
+    else if( move_ == false && enterPokecen_ == false && jump_switch_ == 0 && ( pState.Right || pad.dpad.right ) )
     {
         key_counter_++;     // 長押し
 
@@ -196,7 +183,7 @@ void Player::update()
             {
                 collision_ = false;
                 masu_position_x_ += 2;
-                jump_right_flag_ = true;
+                jump_switch_ = 2;
             }
             else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ + 1 + 10000 ) >= 230) )
             {
@@ -212,7 +199,7 @@ void Player::update()
         }
     }
     // ←が押されたか
-    else if( move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && ( pState.Left || pad.dpad.left ) )
+    else if( move_ == false && enterPokecen_ == false && jump_switch_ == 0 && ( pState.Left || pad.dpad.left ) )
     {
         key_counter_++;     // 長押し
 
@@ -224,7 +211,7 @@ void Player::update()
             {
                 collision_ = false;
                 masu_position_x_ -= 2;
-                jump_left_flag_ = true;
+                jump_switch_ = 3;
             }
             else if(( Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 ) >= 230 ) && (Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) <= 63 || Field::getPartsId( masu_position_y_ * Field::getMapWidth() + masu_position_x_ - 1 + 10000 ) >= 230) )
             {
@@ -241,7 +228,7 @@ void Player::update()
     }
     
     // どれも押されていない
-    if(move_ == false && enterPokecen_ == false && !(jump_down_flag_ || jump_left_flag_ || jump_right_flag_) && !(pState.Down || pState.Up || pState.Right || pState.Left ) && !(pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) )
+    if(move_ == false && enterPokecen_ == false && jump_switch_ == 0 && !(pState.Down || pState.Up || pState.Right || pState.Left ) && !(pad.dpad.down || pad.dpad.up || pad.dpad.left || pad.dpad.right ) )
     {
         dash_ = false;
         animation_no_ = 0;
@@ -328,10 +315,10 @@ void Player::update()
     }
 
 
-    if( dash_ || jump_down_flag_ || jump_left_flag_ || jump_right_flag_ )
+    if( dash_ || jump_switch_ )
         animation_counter_++;
 
-    if( jump_down_flag_ )
+    if( jump_switch_ == 1 )
     {
         dash_ = false;
 
@@ -353,10 +340,10 @@ void Player::update()
         if( move_counter_ >= 32 )
         {
             move_counter_ = 0;
-            jump_down_flag_ = false;
+            jump_switch_ = 0;
         }
     }
-    else if( jump_right_flag_ )
+    else if( jump_switch_ == 2 )
     {
         dash_ = false;
 
@@ -378,10 +365,10 @@ void Player::update()
         if( move_counter_ >= 32 )
         {
             move_counter_ = 0;
-            jump_right_flag_ = false;
+            jump_switch_ = 0;
         }
     }
-    else if( jump_left_flag_ )
+    else if( jump_switch_ == 3 )
     {
         dash_ = false;
 
@@ -403,7 +390,7 @@ void Player::update()
         if( move_counter_ >= 32 )
         {
             move_counter_ = 0;
-            jump_left_flag_ = false;
+            jump_switch_ = 0;
         }
     }
 
@@ -444,12 +431,22 @@ void Player::update()
 
 }
 
+void Player::setMove( bool a )
+{
+    player_.move_ = a;
+}
+
+void Player::setJumpSwitch( int n )
+{
+    player_.jump_switch_ = n;
+}
+
 // 描画
 void Player::draw()
 {
     // 描画範囲の設定
     rect.top = direction_ * kPlayersizeY + (dash_ ? 384L : 0L);
-    rect.left   = animation_no_ * kPlayersizeX + haruka;
+    rect.left   = player_.animation_no_ * kPlayersizeX + haruka;
     rect.right  = rect.left + kPlayersizeX;
     rect.bottom = rect.top + kPlayersizeY;
     
@@ -469,7 +466,7 @@ void Player::draw()
     // 描画
     Sprite::draw( texture_, position_, &rect, Colors::White, 0.0F, Vector2::Zero, scale_, flip_ );
 
-    if( jump_down_flag_ || jump_right_flag_ || jump_left_flag_ )
+    if( jump_switch_ )
     {
         rect.top = 992L;
         rect.left = 0L;

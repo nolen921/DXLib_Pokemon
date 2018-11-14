@@ -1,8 +1,9 @@
 #pragma once
 
+#include<WICTextureLoader.h>
 #include<d3d11.h>
 
-//using namespace DirectX;
+using namespace DirectX;
 
 class Texture
 {

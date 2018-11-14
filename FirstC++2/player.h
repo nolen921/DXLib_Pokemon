@@ -13,13 +13,13 @@ using namespace SimpleMath;
 class Player
 {
 private:
+    static Player player_;
     ID3D11ShaderResourceView* texture_; // テクスチャ
     Vector2 position_;                  // 座標
     float speed_;                       // 移動速度
     RECT rect;                          // 描画範囲
     float scale_;                       // スケール値
     SpriteEffects flip_;                // 反転
-    void animation();
     int animation_no_;                  // テクスチャの番号
     int animation_counter_;             // アニメーション用ループカウント
     int direction_;                     // キャラの向き
@@ -27,12 +27,10 @@ private:
     bool move_;                         // 移動中フラグ0/1
     int move_counter_;                  // 移動用ループカウンター
     bool dash_;                         // ダッシュフラグ0/1
-    bool jump_down_flag_;               // ジャンプフラグ下
-    bool jump_right_flag_;              // ジャンプフラグ右
-    bool jump_left_flag_;               // ジャンプフラグ左
+    int jump_switch_;                   // ジャンプスイッチ(0～3)
     static int masu_position_x_, masu_position_y_;         // マス単位の座標
-    bool collision_;                    // 衝突している
-    bool enterPokecen_;                  // ポケモンセンターに入る
+    static bool collision_;             // 衝突している
+    bool enterPokecen_;                 // ポケモンセンターに入る
 
 public:
     Player();                           // コンストラクタ
@@ -44,10 +42,27 @@ public:
     // 更新処理
     void update();
 
+    // アニメーション
+    static void animation();
+
     // マス単位のプレイヤーX座標を取得
     static int getMasuPositionX() { return masu_position_x_; }
     // マス単位のプレイヤーY座標を取得
     static int getMasuPositionY() { return masu_position_y_; }
+
+    // マス単位のプレイヤーX座標を設定
+    static void setMasuPositionX(int n) { masu_position_x_ = n; }
+    // マス単位のプレイヤーY座標を設定
+    static void setMasuPositionY(int n) { masu_position_y_ = n; }
+
+    // moveを設定
+    static void setMove( bool a );
+
+    // jump_switchを設定
+    static void setJumpSwitch( int n );
+
+    // collisionを設定
+    static void setCollision( bool a ) { collision_ = a; }
 
     // dash_を返す関数
     bool getDash() { return dash_; }

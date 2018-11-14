@@ -17,6 +17,7 @@
 #include "font.h"
 #include "game.h"
 #include "title.h"
+#include "adx.h"
 
 using namespace DirectX;
 using namespace SimpleMath;
@@ -123,6 +124,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
         // エラー
         return 0;
     }
+
+    if( !Adx::init("Game.acf") )
+    {
+        // エラー
+        return 0;
+    }
+
+    Adx::load( "Cuesheet_0.acb", NULL );
 
     // ウィンドウの表示
     ShowWindow( hWnd, SW_SHOWNORMAL );
@@ -255,6 +264,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     title.destroy();
     game.destroy();
     Font::destroy();
+    Adx::destroy();
     Common::destroy();
     Sprite::destroy();
     Direct3D::destroy();
